@@ -2,6 +2,8 @@ import std/logging
 import std/strformat
 import std/strutils
 
+import ../transport/tcp
+
 type Ipv4Address* = (uint8, uint8, uint8, uint8)
 
 type Ipv4* = ref object
@@ -22,6 +24,7 @@ type Ipv4* = ref object
     sourceIpAddress*: Ipv4Address
     destinationIpAddress*: Ipv4Address
     # options*:
+    tcp*: Tcp
 
 proc parseIpv4Version(f: uint8): uint8 =
     # The first header field in an IP packet is the four-bit version field. For IPv4, this is always
@@ -101,3 +104,9 @@ proc parseIpv4*(data: seq[uint8]): Ipv4 =
 
     if result.internetHeaderLength - 5 > 0:
         echo "ihl > 5 !!!"
+
+    case result.protocol:
+    of 6:
+        result.tcp = parseTcp(data[result.internetHeaderLength * 4 .. result.totalLength - 1])
+    else:
+        warn(fmt"Protocol {result.protocol} not implemented.")

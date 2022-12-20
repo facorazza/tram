@@ -4,7 +4,7 @@ import std/strformat
 import ethertype
 
 from mac import MacAddress, parseMacAddress, printMacAddress
-from ../utils import dataString
+from ../utils import toAscii
 
 type EthernetFrame* = ref object
     destinationMacAddress*: MacAddress
@@ -28,4 +28,4 @@ proc initEthernetFrame*(frame: seq[uint8]): EthernetFrame =
     debug(fmt"EtherType: {result.etherType}")
 
     result.payload = frame[14..^1]
-    debug(fmt"Payload: {dataString(result.payload)}")
+    debug(fmt"Payload: {toAscii(result.payload)}")

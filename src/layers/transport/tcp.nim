@@ -2,7 +2,7 @@ import std/logging
 import std/strformat
 import std/strutils
 
-import ../utils
+from ../utils import toAscii
 
 type Tcp* = ref object
     sourcePort*: uint16
@@ -69,4 +69,4 @@ proc parseTcp*(data: seq[uint8]): Tcp =
     #debug(fmt"Options: {result.options}")
 
     result.payload = data[result.dataOffset * 4 .. ^1]
-    debug(fmt"Payload: {dataString(result.payload)}")
+    debug(fmt"Payload: {toAscii(result.payload)}")

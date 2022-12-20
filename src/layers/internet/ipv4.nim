@@ -2,7 +2,7 @@ import std/logging
 import std/strformat
 import std/strutils
 
-import ../utils
+from ../utils import toAscii
 
 type Ipv4Address* = (uint8, uint8, uint8, uint8)
 
@@ -106,4 +106,4 @@ proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
         echo "ihl > 5 !!!"
 
     result.payload = data[result.internetHeaderLength * 4 .. ^1]
-    debug(fmt"Payload: {dataString(result.payload)}")
+    debug(fmt"Payload: {toAscii(result.payload)}")

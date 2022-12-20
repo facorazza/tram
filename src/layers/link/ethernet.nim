@@ -4,13 +4,13 @@ import std/strformat
 import ethertype
 
 from mac import MacAddress, parseMacAddress, printMacAddress
-from ../internet/ipv4 import Ipv4, parseIpv4
+from ../utils import dataString
 
 type EthernetFrame* = ref object
     destinationMacAddress*: MacAddress
     sourceMacAddress*: MacAddress
     etherType*: EtherType
-    ipv4*: Ipv4
+    payload*: seq[uint8]
 
 proc parseEtherType(f: openArray[uint8]): EtherType =
     return EtherType(cast[uint16](f[0]) shl 8 + f[1])
@@ -27,8 +27,5 @@ proc initEthernetFrame*(frame: seq[uint8]): EthernetFrame =
     result.etherType = parseEtherType(frame[12..13])
     debug(fmt"EtherType: {result.etherType}")
 
-    case result.etherType
-    of EtherType.IPv4:
-        result.ipv4 = parseIpv4(frame[14..^1])
-    else:
-        echo "Not implemented"
+    result.payload = frame[14..^1]
+    debug(fmt"Payload: {dataString(result.payload)}")

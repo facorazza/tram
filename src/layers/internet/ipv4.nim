@@ -2,11 +2,11 @@ import std/logging
 import std/strformat
 import std/strutils
 
-import ../transport/tcp
+import ../utils
 
 type Ipv4Address* = (uint8, uint8, uint8, uint8)
 
-type Ipv4* = ref object
+type Ipv4Packet* = ref object
     version*: uint8
     internetHeaderLength*: uint8
     differentiatedServiceCodePoint*: uint8
@@ -24,7 +24,7 @@ type Ipv4* = ref object
     sourceIpAddress*: Ipv4Address
     destinationIpAddress*: Ipv4Address
     # options*:
-    tcp*: Tcp
+    payload*: seq[uint8]
 
 proc parseIpv4Version(f: uint8): uint8 =
     # The first header field in an IP packet is the four-bit version field. For IPv4, this is always
@@ -57,7 +57,7 @@ proc parseIpv4Address*(ip: openArray[uint8]): Ipv4Address =
 proc printIpv4Address*(ip: Ipv4Address): string =
     return fmt"{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}"
 
-proc parseIpv4*(data: seq[uint8]): Ipv4 =
+proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     new result
 
     result.version = parseIpv4Version(data[0])
@@ -105,8 +105,5 @@ proc parseIpv4*(data: seq[uint8]): Ipv4 =
     if result.internetHeaderLength - 5 > 0:
         echo "ihl > 5 !!!"
 
-    case result.protocol:
-    of 6:
-        result.tcp = parseTcp(data[result.internetHeaderLength * 4 .. result.totalLength - 1])
-    else:
-        warn(fmt"Protocol {result.protocol} not implemented.")
+    result.payload = data[result.internetHeaderLength * 4 .. ^1]
+    debug(fmt"Payload: {dataString(result.payload)}")

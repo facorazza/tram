@@ -6,6 +6,6 @@ import layers/transport/tcp
 export initPacketStream, getPackets
 export GlobalHeader
 
-export EtherType
+export EtherTypes
 export Ipv4Address, Ipv4Packet, IpProtocols, parseIpv4, parseIpv4Address
 export TcpPacket, parseTcp

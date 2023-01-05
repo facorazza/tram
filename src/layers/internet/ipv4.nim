@@ -139,10 +139,10 @@ proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     debug(fmt"Evil bit: {result.evilBit}")
 
     result.dontFragment = parseIpv4DontFragmentBit(data[6])
-    debug(fmt"Evil bit: {result.evilBit}")
+    debug(fmt"Don't fragment bit: {result.dontFragment}")
 
     result.moreFragments = parseIpv4MoreFragmentsBit(data[6])
-    debug(fmt"Evil bit: {result.evilBit}")
+    debug(fmt"More fragments bit: {result.moreFragments}")
 
     result.fragmentOffset = parseIpv4FragmentOffset(data[6], data[7])
     debug(fmt"Fragment offset: {result.fragmentOffset}")

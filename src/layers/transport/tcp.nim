@@ -4,7 +4,7 @@ import std/strutils
 
 from ../utils import toAscii
 
-type Tcp* = ref object
+type TcpPacket* = ref object
     sourcePort*: uint16
     destinationPort*: uint16
     sequenceNumber*: uint32
@@ -25,7 +25,7 @@ type Tcp* = ref object
     #options*: uint16
     payload*: seq[uint8]
 
-proc parseTcp*(data: seq[uint8]): Tcp =
+proc parseTcp*(data: seq[uint8]): TcpPacket =
     new result
 
     result.sourcePort = cast[uint16](data[0]) shl 8 + data[1]

@@ -8,4 +8,4 @@ export GlobalHeader
 
 export EtherType
 export Ipv4Address, Ipv4Packet, parseIpv4, parseIpv4Address
-export Tcp, parseTcp
+export TcpPacket, parseTcp

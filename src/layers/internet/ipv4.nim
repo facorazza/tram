@@ -14,11 +14,10 @@ type Ipv4Packet* = ref object
     explicitCongestionNotification*: uint8
     totalLength*: uint16
     identification*: uint16
-    flags*: uint8
     evilBit*: bool
     dontFragment*: bool
     moreFragments*: bool
-    fragmentOffset*: uint8
+    fragmentOffset*: uint16
     timeToLive*: uint8
     protocol*: IpProtocols
     headerChecksum*: uint16
@@ -58,8 +57,62 @@ proc parseIpv4Address*(ip: openArray[uint8]): Ipv4Address =
 proc printIpv4Address*(ip: Ipv4Address): string =
     return fmt"{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}"
 
+proc parseIpv4TotalLength(f: uint8, g: uint8): uint16 =
+    # This 16-bit field defines the entire packet size in bytes, including header and data.
+    return cast[uint16](f) shl 8 + g
+
+proc parseIpv4Identification(f: uint8, g: uint8): uint16 =
+    # This field is an identification field and is primarily used for uniquely identifying the group
+    # of fragments of a single IP datagram.
+    return cast[uint16](f) shl 8 + g
+
+proc parseIpv4EvilBit(f: uint8): bool =
+    # This bit is reserved and must be zero.
+    return cast[bool](f and 0b10000_0000)
+
+proc parseIpv4DontFragmentBit(f: uint8): bool =
+    # If the DF flag is set, and fragmentation is required to route the packet, then the packet is
+    # dropped. This can be used when sending packets to a host that does not have resources to
+    # perform reassembly of fragments. It can also be used for path MTU discovery, either
+    # automatically by the host IP software, or manually using diagnostic tools such as ping or
+    # traceroute.
+    return cast[bool](f and 0b01000_0000)
+
+proc parseIpv4MoreFragmentsBit(f: uint8): bool =
+    # For unfragmented packets, the MF flag is cleared. For fragmented packets, all fragments except the last have the MF flag set. The last fragment has a non-zero Fragment Offset field, differentiating it from an unfragmented packet.
+    return cast[bool](f and 0b00100_0000)
+
+proc parseIpv4FragmentOffset(f: uint8, g: uint8): uint16 =
+    # This field specifies the offset of a particular fragment relative to the beginning of the
+    # original unfragmented IP datagram. The fragmentation offset value for the first fragment is
+    # always 0. The field is 13 bits wide, so that the offset can be from 0 to 8191.
+    # Fragments are specified in units of 8 bytes, which is why fragment length must be a multiple of 8.
+    return cast[uint16](f) shl 5 + g
+
+proc parseIpv4TimeToLive(f: uint8): uint8 =
+    # An eight-bit time to live field limits a datagram's lifetime to prevent network failure in the
+    # event of a routing loop. It is specified in seconds, but time intervals less than 1 second are
+    # rounded up to 1. In practice, the field is used as a hop count—when the datagram arrives at a
+    # router, the router decrements the TTL field by one. When the TTL field hits zero, the router
+    # discards the packet and typically sends an ICMP time exceeded message to the sender.
+    return f
+
 proc parseIpProtocol(f: uint8): IpProtocols =
+    # This field defines the protocol used in the data portion of the IP datagram.
     return IpProtocols(f)
+
+proc parseIpv4HeaderChecksum(f: uint8, g: uint8): uint16 =
+    # The 16-bit IPv4 header checksum field is used for error-checking of the header. When a packet
+    # arrives at a router, the router calculates the checksum of the header and compares it to the
+    # checksum field. If the values do not match, the router discards the packet. Errors in the data
+    # field must be handled by the encapsulated protocol. Both UDP and TCP have separate checksums
+    # that apply to their data.
+    # When a packet arrives at a router, the router decreases the TTL field in the header.
+    # Consequently, the router must calculate a new header checksum.
+    # The checksum field is the 16 bit one's complement of the one's complement sum of all 16 bit
+    # words in the header. For purposes of computing the checksum, the value of the checksum field
+    # is zero.
+    return cast[uint16](f) shl 8 + g
 
 proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     new result
@@ -76,25 +129,31 @@ proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     result.explicitCongestionNotification = parseIpv4ExplicitCongestionNotification(data[1])
     debug(fmt"Explicit congestion notification: {result.explicitCongestionNotification}")
 
-    result.totalLength = cast[uint16](data[2]) shl 8 + data[3]
+    result.totalLength = parseIpv4TotalLength(data[2], data[3])
     debug(fmt"Total length: {result.totalLength}")
 
-    result.identification = cast[uint16](data[4]) shl 8 + data[5]
+    result.identification = parseIpv4Identification(data[4], data[5])
     debug(fmt"Identification: {result.identification}")
 
-    result.flags = data[6]
-    #debug(fmt"Flags: {result.flags}")
+    result.evilBit = parseIpv4EvilBit(data[6])
+    debug(fmt"Evil bit: {result.evilBit}")
 
-    #result.fragmentOffset = data[6..7]
-    #debug(fmt"Fragment offset: {result.fragmentOffset}")
+    result.dontFragment = parseIpv4DontFragmentBit(data[6])
+    debug(fmt"Evil bit: {result.evilBit}")
 
-    result.timeToLive = data[8]
+    result.moreFragments = parseIpv4MoreFragmentsBit(data[6])
+    debug(fmt"Evil bit: {result.evilBit}")
+
+    result.fragmentOffset = parseIpv4FragmentOffset(data[6], data[7])
+    debug(fmt"Fragment offset: {result.fragmentOffset}")
+
+    result.timeToLive = parseIpv4TimeToLive(data[8])
     debug(fmt"Time to live: {result.timeToLive}")
 
     result.protocol = parseIpProtocol(data[9])
     debug(fmt"Protocol: {result.protocol}")
 
-    result.headerChecksum = cast[uint16](data[10]) shl 8 + data[11]
+    result.headerChecksum = parseIpv4HeaderChecksum(data[10], data[11])
     debug(fmt"Header checksum: 0x{result.headerChecksum.toHex()}")
 
     result.sourceIpAddress = parseIpv4Address(data[12..15])

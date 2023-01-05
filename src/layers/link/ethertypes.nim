@@ -1,4 +1,4 @@
-type EtherType* = enum
+type EtherTypes* = enum
     ## EtherTypes: https://en.wikipedia.org/wiki/EtherType
     IPv4 = (0x0800u16, "IPv4"),
     ARP = (0x0806u16, "ARP"),

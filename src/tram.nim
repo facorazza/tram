@@ -1,5 +1,5 @@
 import streams/[packets, global_header]
-import layers/link/[ethertype]
+import layers/link/ethertypes
 import layers/internet/ipv4
 import layers/transport/tcp
 

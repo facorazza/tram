@@ -76,18 +76,18 @@ proc parseIpv4DontFragmentBit(f: uint8): bool =
     # perform reassembly of fragments. It can also be used for path MTU discovery, either
     # automatically by the host IP software, or manually using diagnostic tools such as ping or
     # traceroute.
-    return cast[bool](f and 0b01000_0000)
+    return cast[bool](f and 0b0100_0000)
 
 proc parseIpv4MoreFragmentsBit(f: uint8): bool =
     # For unfragmented packets, the MF flag is cleared. For fragmented packets, all fragments except the last have the MF flag set. The last fragment has a non-zero Fragment Offset field, differentiating it from an unfragmented packet.
-    return cast[bool](f and 0b00100_0000)
+    return cast[bool](f and 0b0010_0000)
 
 proc parseIpv4FragmentOffset(f: uint8, g: uint8): uint16 =
     # This field specifies the offset of a particular fragment relative to the beginning of the
     # original unfragmented IP datagram. The fragmentation offset value for the first fragment is
     # always 0. The field is 13 bits wide, so that the offset can be from 0 to 8191.
     # Fragments are specified in units of 8 bytes, which is why fragment length must be a multiple of 8.
-    return cast[uint16](f) shl 5 + g
+    return cast[uint16](f and 0b0001_1111) + g
 
 proc parseIpv4TimeToLive(f: uint8): uint8 =
     # An eight-bit time to live field limits a datagram's lifetime to prevent network failure in the

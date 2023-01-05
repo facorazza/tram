@@ -60,7 +60,7 @@ proc parseTcp*(data: seq[uint8]): Tcp =
     debug(fmt"Window size: {result.windowSize}")
 
     result.checksum = cast[uint16](data[16]) shl 8 + data[17]
-    debug(fmt"Checksum: 0x{result.checksum.toHex())}")
+    debug(fmt"Checksum: 0x{result.checksum.toHex()}")
 
     result.urgentPointer = cast[uint16](data[18]) shl 8 + data[19]
     debug(fmt"Urgent pointer: {result.urgentPointer}")

@@ -2,6 +2,7 @@ import std/logging
 import std/strformat
 import std/strutils
 
+from ip_protocols import IpProtocols
 from ../utils import toAscii
 
 type Ipv4Address* = (uint8, uint8, uint8, uint8)
@@ -19,7 +20,7 @@ type Ipv4Packet* = ref object
     moreFragments*: bool
     fragmentOffset*: uint8
     timeToLive*: uint8
-    protocol*: uint16
+    protocol*: IpProtocols
     headerChecksum*: uint16
     sourceIpAddress*: Ipv4Address
     destinationIpAddress*: Ipv4Address
@@ -57,6 +58,9 @@ proc parseIpv4Address*(ip: openArray[uint8]): Ipv4Address =
 proc printIpv4Address*(ip: Ipv4Address): string =
     return fmt"{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}"
 
+proc parseIpProtocol(f: uint8): IpProtocols =
+    return IpProtocols(f)
+
 proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     new result
 
@@ -87,7 +91,7 @@ proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     result.timeToLive = data[8]
     debug(fmt"Time to live: {result.timeToLive}")
 
-    result.protocol = data[9]
+    result.protocol = parseIpProtocol(data[9])
     debug(fmt"Protocol: {result.protocol}")
 
     result.headerChecksum = cast[uint16](data[10]) shl 8 + data[11]

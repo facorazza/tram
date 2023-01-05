@@ -91,7 +91,7 @@ proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
     debug(fmt"Protocol: {result.protocol}")
 
     result.headerChecksum = cast[uint16](data[10]) shl 8 + data[11]
-    debug(fmt"Header checksum: 0x{toHex(result.headerChecksum)}")
+    debug(fmt"Header checksum: 0x{result.headerChecksum.toHex()}")
 
     result.sourceIpAddress = parseIpv4Address(data[12..15])
     debug(fmt"Source IP: {printIpv4Address(result.sourceIpAddress)}")
@@ -106,4 +106,4 @@ proc parseIpv4*(data: seq[uint8]): Ipv4Packet =
         echo "ihl > 5 !!!"
 
     result.payload = data[result.internetHeaderLength * 4 .. ^1]
-    debug(fmt"Payload: {toAscii(result.payload)}")
+    debug(fmt"Payload: {result.payload.toAscii()}")

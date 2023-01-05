@@ -28,4 +28,4 @@ proc initEthernetFrame*(frame: seq[uint8]): EthernetFrame =
     debug(fmt"EtherType: {result.etherType}")
 
     result.payload = frame[14..^1]
-    debug(fmt"Payload: {toAscii(result.payload)}")
+    debug(fmt"Payload: {result.payload.toAscii()}")
